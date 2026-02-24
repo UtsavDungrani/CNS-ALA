@@ -1,8 +1,9 @@
 from pathlib import Path
+import re
 import subprocess
 import sys
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 
 app = Flask(__name__)
 BASE_DIR = Path(__file__).resolve().parent
@@ -39,6 +40,11 @@ ALA_CONFIG = {
 @app.get("/")
 def home():
     return render_template("index.html")
+
+
+@app.get("/assets/<path:filename>")
+def project_asset(filename: str):
+    return send_from_directory(BASE_DIR, filename)
 
 
 @app.route("/ala/<int:ala_id>", methods=["GET", "POST"])
@@ -89,7 +95,12 @@ def run_ala_script(script_name: str, inputs: list[str]) -> str:
     if result.stderr:
         combined_output += "\n[stderr]\n" + result.stderr
 
-    return combined_output.strip() or "No output returned by script."
+    cleaned_output = clean_interactive_prompts(combined_output)
+    return cleaned_output.strip() or "No output returned by script."
+
+
+def clean_interactive_prompts(output: str) -> str:
+    return re.sub(r"Enter[^:\n]*:\s*", "", output)
 
 
 if __name__ == "__main__":
