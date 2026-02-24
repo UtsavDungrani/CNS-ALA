@@ -103,5 +103,38 @@ def clean_interactive_prompts(output: str) -> str:
     return re.sub(r"Enter[^:\n]*:\s*", "", output)
 
 
+@app.route("/ala/3/generate-mac", methods=["POST"])
+def generate_mac():
+    """Generate MAC for ALA-3 sender side (for instant display)"""
+    send_message = request.form.get("send_message", "")
+    if not send_message:
+        return {"error": "Message is required"}, 400
+    
+    # Run just the sender portion of ALA3
+    script_path = BASE_DIR / "ALA3.py"
+    stdin_data = f"{send_message}\n\n\n"  # message, empty received_message, empty received_mac
+    
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            input=stdin_data,
+            text=True,
+            capture_output=True,
+            timeout=10,
+            cwd=BASE_DIR,
+        )
+    except Exception:
+        return {"error": "Failed to generate MAC"}, 500
+    
+    output = result.stdout or ""
+    # Extract the MAC from "Generated MAC: <hex>"
+    import re
+    match = re.search(r"Generated MAC:\s*([a-f0-9]+)", output)
+    if match:
+        mac = match.group(1)
+        return {"mac": mac}
+    return {"error": "Could not extract MAC"}, 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -151,7 +151,12 @@ if __name__ == "__main__":
     print("\n--- Tamper Test ---")
     tampered = input("Enter tampered message: ").encode()
 
-    if verify_signature(tampered, signature, public_key):
-        print("Tampered Verification: SUCCESS (unexpected)")
+    if tampered == message:
+        print("Tampered Verification: SUCCESS")
+        print("(No tampering detected – message is unchanged)")
     else:
-        print("Tampered Verification: FAILED (Integrity Verified)")
+        if verify_signature(tampered, signature, public_key):
+            print("Tampered Verification: SUCCESS (unexpected collision)")
+        else:
+            print("Tampered Verification: FAILED")
+            print("Signature is NOT valid for modified message.")
