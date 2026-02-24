@@ -1,5 +1,12 @@
+import hashlib
+
+
 def right_rotate(x, n, bits=32):
     return ((x >> n) | (x << (bits - n))) & ((1 << bits) - 1)
+
+
+def left_rotate(x, n, bits=32):
+    return ((x << n) | (x >> (bits - n))) & ((1 << bits) - 1)
 
 
 # ========================= SHA-1 =========================
@@ -26,7 +33,7 @@ def sha1(message):
 
         for j in range(16, 80):
             val = w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16]
-            w.append(right_rotate(val, 1))
+            w.append(left_rotate(val, 1))
 
         a, b, c, d, e = h0, h1, h2, h3, h4
 
@@ -129,9 +136,7 @@ def sha256(message):
 # Educational only (real SHA-512 uses 80 rounds and 64-bit constants)
 
 def sha512(message):
-    # For lab comparison purpose only:
-    # Double SHA-256 to simulate 512-bit output
-    return sha256(message) + sha256(message[::-1])
+    return hashlib.sha512(message.encode()).hexdigest()
 
 
 # ========================= MAIN PROGRAM =========================
